@@ -1,7 +1,10 @@
 arduino-compile: 
-  image: tombenke/darduino 
+  image: ubuntu 
   tags:
     - docker
+  before_script:
+    - apt-get update; apt-get -y upgrade
+    - apt-get install arduino
   script:
     - cd src/main
     - arduino-cli compile -b esp32:esp32:esp32doit-devkit-v1 main.ino --library ../lib/Arduino-Filters
