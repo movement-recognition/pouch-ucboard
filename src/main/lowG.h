@@ -12,7 +12,7 @@
 #define HW_LOWACCEL_SCL_PIN D22
 #define HW_LOCACCEL_I2C_ADR 0x53
 
-#define LOW_G_BUFFER_SIZE 100
+#define LOW_G_BUFFER_SIZE 128
 
 class LowG {
     public:

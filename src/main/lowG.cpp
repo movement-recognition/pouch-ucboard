@@ -24,9 +24,9 @@ void LowG::interrupt() {
     byte dataZL = Wire.read();
     byte dataZM = Wire.read();
     
-    meas_X[meas_ptr] = convSignedInt(dataXM, dataXL);
-    meas_Y[meas_ptr] = convSignedInt(dataYM, dataYL);
-    meas_Z[meas_ptr] = convSignedInt(dataZM, dataZL);
+    meas_X[meas_ptr] = convSignedInt(dataXM, dataXL) * 39;
+    meas_Y[meas_ptr] = convSignedInt(dataYM, dataYL) * 39;
+    meas_Z[meas_ptr] = convSignedInt(dataZM, dataZL) * 39;
     meas_T[meas_ptr] = millis();
 
     meas_ptr = (meas_ptr+1) % LOW_G_BUFFER_SIZE;

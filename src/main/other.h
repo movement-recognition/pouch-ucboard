@@ -7,8 +7,10 @@
 #include <esp_attr.h>
 #include <Wire.h>
 
+#define HW_TEMPERATURE_PIN 36
+#define HW_VIBRATION_PIN 32
 
-#define OTHER_BUFFER_SIZE 100
+#define OTHER_BUFFER_SIZE 128
 
 class Other {
     public:
