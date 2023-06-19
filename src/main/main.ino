@@ -121,7 +121,7 @@ void check_serial() {
             treshold_z_axis = parameter.toInt();
         } else if(command.equals("clear")) {
             file.close();
-            sdCard.writeFile(SD, "/rawData.csv", ">;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n>;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+            sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
             file = SD.open("/rawData.csv", FILE_APPEND);
         } else if(command.equals("dump")) {
             file.close();
@@ -183,9 +183,10 @@ void check_write_sd() {
 
         if((sd_logging_mode & 0x02) && fsm_sensorpack != fsm_sensorpack_last) {
             char message[60];
-            snprintf(message, sizeof(message), ">;anal;%d;%d;%d;%d;%d;%d\n",
+            snprintf(message, sizeof(message), ">;anal;%d;%d;%d;%d;%d;%d;%d\n",
                 last_analysis, fsm_sensorpack,
-                anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer, anal_Vibration
+                anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer,
+                anal_Vibration, anal_Temperature
             );
             auto status = file.print(message);
             Serial.print(message);
@@ -296,7 +297,7 @@ void setup() {
     other.setup();
 
     sdCard.setup();
-    sdCard.writeFile(SD, "/rawData.csv", "meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\nanal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean");
+    sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
     file = SD.open("/rawData.csv", FILE_APPEND);
     
 
