@@ -1,30 +1,50 @@
+import threading
+import time
 import serial
 
-def process(input_string):
-    # Your custom processing logic here
-    print("Received:", input_string)
+class SensorboxConnector:
+    def __init__(self):
+        self.serial_port = '/dev/ttyUSB0'
+        self.baud_rate = 500000
+        self.serial = None
+        self.thread = None
+        self.is_running = False
 
-# Open the serial connection
-ser = serial.Serial('/dev/ttyUSB0', baudrate=500000)
+    def connect(self):
+        self.serial = serial.Serial(self.serial_port, self.baud_rate)
+        self.is_running = True
+        self.thread = threading.Thread(target=self.__read_serial)
+        self.thread.start()
 
-# Send commands and process output
-while True:
-    # Get command from user
-    command = input("Enter command ('q' to quit): ")
+    def disconnect(self):
+        self.is_running = False
+        if self.thread is not None:
+            self.thread.join()
+        if self.serial is not None:
+            self.serial.close()
 
-    # Check for quitting condition
-    if command.lower() == 'q':
-        break
+    def call_method(self, method):
+        if self.serial is not None and self.serial.is_open:
+            self.serial.write(method.encode())
 
-    # Write command to serial console
-    ser.write(command.encode() + b'\n')
+    def __read_serial(self):
+        while self.is_running:
+            if self.serial is not None and self.serial.is_open:
+                line = self.serial.readline().decode().strip()
+                self.__process(line)
 
-    # Read output lines
-    while True:
-        line = ser.readline().decode().strip()
-        if not line:
-            break
-        process(line)
+    def __process(self, line):
+        # Add your processing logic here
+        print(f"Received: {line}")
 
-# Close the serial connection
-ser.close()
+
+if __name__ == "__main__":
+    connector = SensorboxConnector()
+    connector.connect()
+
+
+    connector.call_method("time")
+
+    time.sleep(100)
+
+    connector.disconnect()
