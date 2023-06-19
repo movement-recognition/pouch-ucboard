@@ -87,7 +87,7 @@ void SD_Card::listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 }
 
 void SD_Card::writeFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Writing file: %s\n", path);
+    // Serial.printf("Writing file: %s\n", path);
 
     File file = fs.open(path, FILE_WRITE);
     if(!file){
@@ -95,7 +95,7 @@ void SD_Card::writeFile(fs::FS &fs, const char * path, const char * message){
         return;
     }
     if(file.print(message)){
-        Serial.println("File written");
+        // Serial.println("File written");
     } else {
         Serial.println("Write failed");
     }
@@ -119,7 +119,6 @@ void SD_Card::appendFile(fs::FS &fs, const char * path, const char * message){
 }
 
 void SD_Card::readFile(fs::FS &fs, const char * path){
-    Serial.printf("Reading file: %s\n", path);
 
     File file = fs.open(path);
     if(!file){
@@ -127,7 +126,6 @@ void SD_Card::readFile(fs::FS &fs, const char * path){
         return;
     }
 
-    Serial.print("Read from file: ");
     while(file.available()){
         Serial.write(file.read());
     }

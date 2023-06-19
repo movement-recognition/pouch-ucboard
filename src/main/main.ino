@@ -26,9 +26,6 @@ uint8_t serial_buffer[serial_buflen];
 
 String command;
 String parameter;
-// parameter.toInt();
-// parameter.toDouble();
-
 
 // initialize the measurement-objects.
 // would be better to implement them as singletons.
@@ -60,6 +57,7 @@ int_fast32_t anal_Magni_X_outer = 0;
 int_fast32_t anal_Magni_Y_outer = 0;
 int_fast32_t anal_Magni_Z_outer = 0;
 int_fast32_t anal_Vibration = 0;
+int_fast32_t anal_Temperature = 0;
 
 
 // initialize the interrupt-variables
@@ -111,8 +109,24 @@ void check_serial() {
             command = serialstr;
         }
 
-        if(command.indexOf('q') >=0) {
-            while(1) {}
+        if(command.equals("time")) {
+            Serial.print(">;time;");
+            Serial.print(millis());
+            Serial.println(";");
+        } else if(command.equals("trsh_plnr")) {
+            treshold_planar = parameter.toInt();
+        } else if(command.equals("trsh_vibr")) {
+            treshold_vibration = parameter.toInt();
+        } else if(command.equals("trsh_zaxs")) {
+            treshold_z_axis = parameter.toInt();
+        } else if(command.equals("clear")) {
+            file.close();
+            sdCard.writeFile(SD, "/rawData.csv", ">;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n>;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+            file = SD.open("/rawData.csv", FILE_APPEND);
+        } else if(command.equals("dump")) {
+            file.close();
+            sdCard.readFile(SD, "/rawData.csv");
+            file = SD.open("/rawData.csv", FILE_APPEND);
         }
         
         fsm_serial = 99;
@@ -174,7 +188,7 @@ void check_write_sd() {
                 anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer, anal_Vibration
             );
             auto status = file.print(message);
-            Serial.println(message);
+            Serial.print(message);
             fsm_sensorpack_last = fsm_sensorpack;
         }
         
@@ -216,6 +230,9 @@ void check_analyze() {
         #endif
 
         // calculate average of measurement time-window
+        anal_Magni_X_outer = 0;
+        anal_Magni_Y_outer = 0;
+        anal_Magni_Z_outer = 0;
         uint_fast8_t buffer_ptr = lowG.meas_ptr;
         for(uint_fast8_t i = 0; i < LOW_G_BUFFER_SIZE; i++) {
             uint_fast8_t buf_ptr = (buffer_ptr + i) % LOW_G_BUFFER_SIZE;
@@ -228,12 +245,16 @@ void check_analyze() {
         anal_Magni_Y_outer = anal_Magni_Y_outer / (float)(LOW_G_BUFFER_SIZE);
         anal_Magni_Z_outer = anal_Magni_Z_outer / (float)(LOW_G_BUFFER_SIZE);
         
+        anal_Vibration = 0;
+        anal_Temperature = 0;
         buffer_ptr = other.meas_ptr;
         for(uint_fast8_t i = 0; i< OTHER_BUFFER_SIZE; i++) {
             uint_fast8_t buf_ptr = (buffer_ptr + i) % OTHER_BUFFER_SIZE;
             anal_Vibration += other.meas_Vibration[i];
+            anal_Temperature += other.meas_Temp[i];
         }
         anal_Vibration = anal_Vibration / (float)(OTHER_BUFFER_SIZE);
+        anal_Temperature = anal_Temperature / (float)(OTHER_BUFFER_SIZE);
 
         if(anal_Magni_Z_outer < 300 && anal_Magni_Z_outer > -300) {
             fsm_sensorpack = 5;

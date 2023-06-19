@@ -1,5 +1,12 @@
 ## Hardware
 
+
+## Flashing the microcontroller
+
+
+
+## General settings in the software
+
 The system-clock of the ESP32-Microcontroller is also reduced to save some power. Reducing it's frequency from 80MHz down to 40MHz saves around 40mA. Because our application does not make use of possible wireless communications, the wifi and bluetooth modules are shut down as well. this also frees up the second Analog-to-Digital-Converter on the µC-Processor-Board.
 
 ## Data Processing flow
@@ -23,4 +30,16 @@ Caused by the difference of the buffer-length (640ms) and the call-rate (100ms),
 
 ## Serial communication
 
+Possible commands are:
 
+- `time` : returns the current microprocessor-time in milliseconds
+- `trsh_plnr`: sets the planar-threshold
+- `trsh_vibr`: sets the vibration-threshold
+- `trsh_zaxs`: sets the treshold for detections in the z-layer
+- `status`: 
+- `log_mode`: sets the logging mode (first byte = write all measurements to sd, second byte = write all events to sd-card). defaults to 0x02.
+
+- `clear`: clears the data-archive on the sd-card. should be called after all data has been dumped
+- `dump`: dumps all contents on the sd-card to the serial console. during that process, analysis-precision cannot be guaranteed.
+
+All lines to be parsed by a python-script on the "raspberry pi"-side start with the `>;` part and close with the newline-character `\\n`.
