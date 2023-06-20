@@ -17,6 +17,8 @@ The blue LED on the µC-Board indicates activity on the SD card except for pure-
 ## Data Processing flow
 The sensor is aquired with a frequency of 200Hz. A 5ms-raster is used to accomplish that. Because the pure aquisition-process takes about 2500-3000µs, there are 50% of CPU-Time left for all the other activities.
 
+![data-flow](docs/data-flow.svg)
+
 It wasn't possible to aquire all the sensor data within an interrupt call. Therefor the interrupt function only toggles the `fsm_measure_loop` variable to 1. In the main loop, a measurement is only initiated when this value is 1. After a measurement, this value is reset to 0. In combination with the other task-functions that keep their own timers ticking, the system imitates a very primitive version of a scheduler with a fixed process-order.
 
 Main cause for that slow aquisition-process is the longeivity of the I²C-Communication, most of the time is needed for that. In contrast to that: The analog registers can be read within a few hundred microseconds.
@@ -32,7 +34,7 @@ Every 100 milliseconds the data is read from the ring-buffers and processed. The
 If the values of the Accelerometer in the z-axis deviate from the default 10m²/s-Value by more than 1g (default value, can be reconfigured), the `fsm_sensorpack`-statemachine switches to the "movement upwards" or "movement downwards", depending on the sensor measuring 11g's or only 9g's. On the other hand, the statemachine switches to "free fall"-mode if all three axis summed up don't measure any relevant amount of acceleration (default value: <0.3g). Detecting, if the sensor board is moving or not is a little bit tricky. Therefor it combines the measurements of the X and Y accelerometer-axis with the value of the vibration sensor. This sensor is debounced heavily before using it's values - they are quite similar to a PWM-Signal so it's duty cycle is determined by averaging over the whole 640ms as well.
 
 Caused by the difference of the buffer-length (640ms) and the call-rate (100ms), each raw-datapoint is processed at least six times during it's lifetime. this guarantees, that spikes or events happening at the front or end of the buffer can be detected by forward-looking-algorithms that may be used later.
-ð
+
 ### Serial communication
 External communicatin is possible via the serial console. The connection is configured to use 500.000 Bauds - this ensures that the times needed for sending data are as low as possible without saturating the Serial-to-USB-Converter. Possible commands are:
 - `time` : returns the current microprocessor-time in milliseconds
