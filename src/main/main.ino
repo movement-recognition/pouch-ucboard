@@ -39,7 +39,12 @@ SD_Card sdCard;
 File file;
 uint_fast32_t last_flush_timestamp = 0;
 const uint_fast16_t flush_interval = 1000; // milliseconds
-uint_fast8_t sd_logging_mode = 0x02; // first bit = measurement-logging, second bit = event-logging
+// sd logging mode: 
+// 0x01 = measurement-logging to SD-Card
+// 0x02 = event-logging to SD-Card
+// 0x04 = measurement-logging to Serial-console
+// 0x08 = event-logging to Serial-console
+uint_fast8_t sd_logging_mode = 0x0A; 
 
 // Settings for analyzation
 
@@ -95,8 +100,12 @@ void check_serial() {
             serial_buffer[serial_bufidx] = '\0';
         }
     }
-        
+
+    
     if(1 == fsm_serial) {
+        #ifdef TIME_LOGGER
+            uint_fast32_t t_1 = micros();
+        #endif
         // split the input line into command and parameter
         String serialstr;
         serialstr = String((char*) serial_buffer);
@@ -119,17 +128,46 @@ void check_serial() {
             treshold_vibration = parameter.toInt();
         } else if(command.equals("trsh_zaxs")) {
             treshold_z_axis = parameter.toInt();
+        } else if(command.equals("write_prm")) {
+            sd_logging_mode = parameter.toInt();
+        } else if(command.equals("read_prm")) {
+            char message[60];
+            snprintf(message, sizeof(message), ">;stat;%d;%d;%d;%d\n",
+                sd_logging_mode, treshold_planar, treshold_vibration, treshold_z_axis
+            );
+            Serial.print(message);
+        } else if(command.equals("status")) {
+            // return the last measurement-dataset
+            char message[60];
+            snprintf(message, sizeof(message), ">;meas;%d;%d;%d;%d;%d;%d;%d;%d;%d;\n",
+                    highG.meas_T[highG.meas_ptr],
+                    highG.meas_X[highG.meas_ptr], highG.meas_Y[highG.meas_ptr], highG.meas_Z[highG.meas_ptr],
+                    lowG.meas_X[lowG.meas_ptr], lowG.meas_Y[lowG.meas_ptr], lowG.meas_Z[lowG.meas_ptr],
+                    other.meas_Temp[other.meas_ptr], other.meas_Vibration[other.meas_ptr]
+                );
+            Serial.print(message);
+            
         } else if(command.equals("clear")) {
+            digitalWrite(ONBOARD_LED, 1);
             file.close();
             sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
             file = SD.open("/rawData.csv", FILE_APPEND);
+            digitalWrite(ONBOARD_LED, 0);
         } else if(command.equals("dump")) {
+            digitalWrite(ONBOARD_LED, 1);
             file.close();
             sdCard.readFile(SD, "/rawData.csv");
             file = SD.open("/rawData.csv", FILE_APPEND);
+            digitalWrite(ONBOARD_LED, 0);
         }
         
         fsm_serial = 99;
+        #ifdef TIME_LOGGER
+            uint_fast32_t t_2 = micros();
+            uint_fast32_t delta = t_2-t_1;
+            Serial.print("serialop\t");
+            Serial.println(delta);
+        #endif
     }
 }
 
@@ -164,7 +202,7 @@ void check_write_sd() {
             uint_fast32_t t_2 = micros();
         #endif
 
-        if(sd_logging_mode & 0x01) { // write measurements to SD-Card
+        if(sd_logging_mode & 0x01 || sd_logging_mode & 0x04) { // write measurements to SD-Card
             for(uint_fast16_t q = measurement_count; q >0; q--) {
                 uint8_t highG_ptr = (highG.meas_ptr + HIGH_G_BUFFER_SIZE - q) % HIGH_G_BUFFER_SIZE;
                 uint8_t lowG_ptr = (lowG.meas_ptr + LOW_G_BUFFER_SIZE - q) % LOW_G_BUFFER_SIZE;
@@ -177,19 +215,28 @@ void check_write_sd() {
                     lowG.meas_X[lowG_ptr], lowG.meas_Y[lowG_ptr], lowG.meas_Z[lowG_ptr],
                     other.meas_Temp[other_ptr], other.meas_Vibration[other_ptr]
                 );
-                auto status = file.print(message);
+                if(sd_logging_mode & 0x01) {
+                    auto status = file.print(message);
+                }
+                if(sd_logging_mode & 0x04) {
+                    Serial.print(message);
+                }
             }
         }
 
-        if((sd_logging_mode & 0x02) && fsm_sensorpack != fsm_sensorpack_last) {
+        if((sd_logging_mode & 0x02 || sd_logging_mode & 0x08) && fsm_sensorpack != fsm_sensorpack_last) {
             char message[60];
             snprintf(message, sizeof(message), ">;anal;%d;%d;%d;%d;%d;%d;%d\n",
                 last_analysis, fsm_sensorpack,
                 anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer,
                 anal_Vibration, anal_Temperature
             );
-            auto status = file.print(message);
-            Serial.print(message);
+            if(sd_logging_mode & 0x02) {
+                auto status = file.print(message);
+            }
+            if(sd_logging_mode & 0x08) {
+                Serial.print(message);
+            }
             fsm_sensorpack_last = fsm_sensorpack;
         }
         

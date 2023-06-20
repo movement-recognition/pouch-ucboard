@@ -28,6 +28,7 @@ class SensorboxConnector:
         print("dumping all old events after boot.")
         self.__call_method("dump")
         self.__call_method("clear")
+        print("dump completed.")
 
     def disconnect(self):
         self.is_running = False
@@ -74,7 +75,19 @@ class SensorboxConnector:
                 self.event_hook(event)
                 self.events.append(event)
             elif data[2] == "meas":
-                print(line)
+                print("MEAS", line)
+            elif data[2] == "stat":
+                print("STAT", line)
+
+    def set_parameter(param_name, value):
+        if param_name == "treshold_planar":
+            self.__call_method(f"trsh_plnr {value}")
+        elif param_name == "treshold_vibration":
+            self.__call_method(f"trsh_vibr {value}")
+        elif param_name == "treshold_z-axis":
+            self.__call_method(f"trsh_zaxs {value}")
+        
+
 
 
 def event_hook(event):
@@ -85,6 +98,8 @@ def event_hook(event):
 if __name__ == "__main__":
     connector = SensorboxConnector(event_hook)
     connector.connect()
+
+    
 
     time.sleep(100)
     
