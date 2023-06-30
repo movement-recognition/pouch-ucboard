@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <math.h>
 #include <cstdint>
 #include <math.h>
 // includes of scripts not necessary: all .ino-files are included automatically in alphabetical order.
@@ -44,11 +45,12 @@ const uint_fast16_t flush_interval = 1000; // milliseconds
 // 0x02 = event-logging to SD-Card
 // 0x04 = measurement-logging to Serial-console
 // 0x08 = event-logging to Serial-console
+// 0x10 = tris-logging to SD-Card
+// 0x20 = tris-logging to Serial-console
 uint_fast8_t sd_logging_mode = 0x0A; 
 
-// Settings for analyzation
+// Settings for analysis
 
-#define ANAL_BUFFER_SIZE 128
 uint_fast32_t last_analysis = 0;
 uint_fast8_t fsm_sensorpack = 0;
 uint_fast8_t fsm_sensorpack_last = 0;
@@ -64,6 +66,25 @@ int_fast32_t anal_Magni_Z_outer = 0;
 int_fast32_t anal_Vibration = 0;
 int_fast32_t anal_Temperature = 0;
 
+// Settings for third-loop
+#define TRIS_BUFFER_SIZE 50
+uint_fast32_t last_tris = 0;
+uint_fast8_t tris_ptr = 0;
+
+double tris_magni[TRIS_BUFFER_SIZE];
+double tris_theta[TRIS_BUFFER_SIZE];
+double tris_phi[TRIS_BUFFER_SIZE];
+
+const uint_fast32_t tris_interval = 2500;
+uint_fast8_t tris_update = 0;
+
+double tris_magni_sum = 0;
+double tris_phi_sum = 0;
+double tris_theta_sum = 0;
+
+double tris_magni_stdev = 0;
+double tris_phi_stdev = 0;
+double tris_theta_stdev = 0;
 
 // initialize the interrupt-variables
 hw_timer_t *interrupt = NULL;
@@ -239,6 +260,23 @@ void check_write_sd() {
             }
             fsm_sensorpack_last = fsm_sensorpack;
         }
+
+        if((sd_logging_mode & 0x10 || sd_logging_mode & 0x20) && tris_update) {
+            char message[60];
+            snprintf(message, sizeof(message), ">;tris;%d;%d;%d;%d;%d;%d;%d\n",
+                last_tris, 
+                tris_magni_sum, tris_phi_sum, tris_theta_sum,
+                tris_magni_stdev, tris_phi_stdev, tris_theta_stdev
+            );
+            if(sd_logging_mode & 0x10) {
+                auto status = file.print(message);
+            }
+            if(sd_logging_mode & 0x20) {
+                Serial.print(message);
+            }
+
+            tris_update = 0;
+        }
         
         #ifdef TIME_LOGGER
             uint_fast32_t t_3 = micros();
@@ -318,6 +356,16 @@ void check_analyze() {
             fsm_sensorpack = 0; // standstill
         }
 
+        // Add data to the tris-buffer
+        double magnitude = sqrt(anal_Magni_X_outer * anal_Magni_X_outer + anal_Magni_Y_outer * anal_Magni_Y_outer + anal_Magni_Z_outer * anal_Magni_Z_outer);
+        double phi = atan2(anal_Magni_Y_outer, anal_Magni_X_outer);
+        double theta = acos(anal_Magni_Z_outer / magnitude);
+
+        tris_ptr = (tris_ptr + 1) % TRIS_BUFFER_SIZE;
+        tris_magni[tris_ptr] = magnitude;
+        tris_theta[tris_ptr] = theta;
+        tris_phi[tris_ptr] = phi;
+
 
         #ifdef TIME_LOGGER
             uint_fast32_t t_2 = micros();
@@ -327,6 +375,50 @@ void check_analyze() {
         #endif
 
         last_analysis = millis();
+    }
+}
+
+void check_tris() {
+    if(millis() - last_tris > tris_interval || millis() - last_tris < 0) {
+        #ifdef TIME_LOGGER
+            uint_fast32_t t_1 = micros();
+        #endif
+
+        for(int i = 0; i < TRIS_BUFFER_SIZE; i++) {
+            uint_fast8_t buf_ptr = (tris_ptr + i) % TRIS_BUFFER_SIZE;
+            tris_magni_sum += tris_magni[buf_ptr];
+            tris_phi_sum += tris_phi[buf_ptr];
+            tris_theta_sum += tris_theta[buf_ptr];
+        }
+
+        double tris_magni_sum = tris_magni_sum / TRIS_BUFFER_SIZE;
+        double tris_phi_sum = tris_phi_sum / TRIS_BUFFER_SIZE;
+        double tris_theta_sum = tris_theta_sum / TRIS_BUFFER_SIZE;
+
+        for(int i = 0; i < TRIS_BUFFER_SIZE; i++) {
+            uint_fast8_t buf_ptr = (tris_ptr + i) % TRIS_BUFFER_SIZE;
+            
+            double magni_d = tris_magni[buf_ptr] - tris_magni_sum;
+            tris_magni_stdev += magni_d * magni_d;
+            double phi_d = tris_phi[buf_ptr] - tris_phi_sum;
+            tris_phi_stdev += phi_d * phi_d;
+            double theta_d = tris_theta[buf_ptr] - tris_theta_sum;
+            tris_theta_stdev += theta_d * theta_d;
+        }
+
+        tris_magni_stdev = sqrt(tris_magni_stdev / TRIS_BUFFER_SIZE);
+        tris_phi_stdev = sqrt(tris_phi_stdev / TRIS_BUFFER_SIZE);
+        tris_theta_stdev = sqrt(tris_theta_stdev / TRIS_BUFFER_SIZE);
+
+        #ifdef TIME_LOGGER
+            uint_fast32_t t_2 = micros();
+
+            Serial.print("tris  \t");
+            Serial.println(t_2-t_1);
+        #endif
+
+        tris_update = 1;
+        last_tris = millis();
     }
 }
 
@@ -366,6 +458,8 @@ void loop() {
     check_write_sd(); // takes around 2000µs for 10 measurements every 10 measurements
     check_interrupt();
     check_analyze(); // 100µs
+    check_interrupt();
+    check_tris(); // run every few seconds
         
     
 }
