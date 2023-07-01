@@ -173,6 +173,7 @@ void check_serial() {
                 );
             Serial.print(message);
         } else if(command.equals("statex")) {
+            char message[60];
             snprintf(message, sizeof(message), ">;anal;%d;%d;%d;%d;%d;%d;%d\n",
                 last_analysis, fsm_sensorpack,
                 anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer,
