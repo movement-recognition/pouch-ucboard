@@ -433,7 +433,7 @@ void check_tris() {
             fsm_sensorpack = 3; // moving downwards
         } else if(tris_magni_stdev > 100 || tris_theta_stdev > 0.005) {
             fsm_sensorpack = 2; // accelerated movement
-        } else if(tris_magni_stdev > 15 {
+        } else if(tris_magni_stdev > 15) {
             fsm_sensorpack = 1; // slight movement
         } else if(tris_magni_stdev <= 15) {
             fsm_sensorpack = 0; // standstill
