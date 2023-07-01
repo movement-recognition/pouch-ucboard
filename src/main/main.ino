@@ -56,9 +56,10 @@ uint_fast8_t fsm_sensorpack = 0;
 uint_fast8_t fsm_sensorpack_last = 0;
 const uint_fast32_t analysis_interval = 100; // milliseconds
 
-uint_fast16_t treshold_planar = 1000;
-uint_fast16_t treshold_vibration = 200;
-uint_fast16_t treshold_z_axis = 1000;
+uint_fast16_t treshold_magnitude = 3000;
+uint_fast16_t treshold_magni_stdev_high = 100;
+uint_fast16_t treshold_magni_stdev_low = 15;
+double treshold_theta_stdev = 0.02;
 
 int_fast32_t anal_Magni_X_outer = 0;
 int_fast32_t anal_Magni_Y_outer = 0;
@@ -148,18 +149,22 @@ void check_serial() {
             file.print("\n");
             Serial.print(">;marker;");
             Serial.println(parameter);
-        } else if(command.equals("trsh_plnr")) {
-            treshold_planar = parameter.toInt();
-        } else if(command.equals("trsh_vibr")) {
-            treshold_vibration = parameter.toInt();
-        } else if(command.equals("trsh_zaxs")) {
-            treshold_z_axis = parameter.toInt();
+        } else if(command.equals("trsh_magni")) {
+            treshold_magnitude = parameter.toInt();
+        } else if(command.equals("trsh_mstdev_h")) {
+            treshold_magni_stdev_high = parameter.toInt();
+        } else if(command.equals("trsh_mstdev_l")) {
+            treshold_magni_stdev_low = parameter.toInt();
+        } else if(command.equals("trsh_t_stdev")) {
+            treshold_theta_stdev = parameter.toDouble();
         } else if(command.equals("write_prm")) {
             sd_logging_mode = parameter.toInt();
         } else if(command.equals("read_prm")) {
             char message[60];
-            snprintf(message, sizeof(message), ">;stat;%d;%d;%d;%d\n",
-                sd_logging_mode, treshold_planar, treshold_vibration, treshold_z_axis
+            snprintf(message, sizeof(message), ">;stat;%d;%d;%d;%d;%lf\n",
+                sd_logging_mode,
+                treshold_magnitude, treshold_magni_stdev_high, treshold_magni_stdev_low,
+                treshold_theta_stdev
             );
             Serial.print(message);
         } else if(command.equals("status")) {
@@ -179,12 +184,14 @@ void check_serial() {
                 anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer,
                 anal_Vibration, anal_Temperature
             );
-            snprintf(message, sizeof(message), ">;tris;%d;%lf;%lf;%lf;%lf;%lf;%lf\n",
+            Serial.print(message);
+            char message_two[70];
+            snprintf(message_two, sizeof(message_two), ">;tris;%d;%lf;%lf;%lf;%lf;%lf;%lf\n",
                 last_tris, 
                 tris_magni_sum, tris_phi_sum, tris_theta_sum,
                 tris_magni_stdev, tris_phi_stdev, tris_theta_stdev
             );
-        }
+            Serial.print(message_two);
         } else if(command.equals("clear")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
@@ -437,17 +444,17 @@ void check_tris() {
 
         if(tris_phi_sum > 0.5) {
             fsm_sensorpack = 6; // being tilted
-        } else if(tris_magni_sum < 3000) {
+        } else if(tris_magni_sum < treshold_magnitude) {
             fsm_sensorpack = 5; // free fall
         } else if(0 == 1) {
             fsm_sensorpack = 4; // moving upwards
         } else if(0 == 1) {
             fsm_sensorpack = 3; // moving downwards
-        } else if(tris_magni_stdev > 100 || tris_theta_stdev > 0.005) {
+        } else if(tris_magni_stdev > treshold_magni_stdev_high || tris_theta_stdev > treshold_theta_stdev) {
             fsm_sensorpack = 2; // accelerated movement
-        } else if(tris_magni_stdev > 15) {
+        } else if(tris_magni_stdev > treshold_magni_stdev_low) {
             fsm_sensorpack = 1; // slight movement
-        } else if(tris_magni_stdev <= 15) {
+        } else if(tris_magni_stdev <= treshold_magni_stdev_low) {
             fsm_sensorpack = 0; // standstill
         }
 

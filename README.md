@@ -38,9 +38,10 @@ Caused by the difference of the buffer-length (640ms) and the call-rate (100ms),
 ### Serial communication
 External communicatin is possible via the serial console. The connection is configured to use 500.000 Bauds - this ensures that the times needed for sending data are as low as possible without saturating the Serial-to-USB-Converter. Possible commands are:
 - `time` : returns the current microprocessor-time in milliseconds
-- `trsh_plnr`: sets the planar-threshold
-- `trsh_vibr`: sets the vibration-threshold
-- `trsh_zaxs`: sets the treshold for detections in the z-layer
+- `trsh_magni`: sets the freefall-magnitude-treshold
+- `trsh_mstdev_h`: sets the higher-treshold for "standstill" vs. "movement"-detection
+- `trsh_mstdev_l`: sets the lower-treshold for "standstill" vs. "movement"-detection
+- `trsh_t_stdev`: sets the treshold for theta-deviations ()
 - `write_prm`: write-parameter: controls if and how the measurements should be dumped to the sd-card. Those four parameters listed below need to be added together and transmitted in decimal format.
   * `0x01` = measurement-logging to SD-Card
   * `0x02` = event-logging to SD-Card
