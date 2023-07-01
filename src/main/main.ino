@@ -146,7 +146,7 @@ void check_serial() {
         } else if(command.equals("marker")) {
             file.print(parameter);
             file.print("\n");
-            Serial.print(">;");
+            Serial.print(">;marker;");
             Serial.println(parameter);
         } else if(command.equals("trsh_plnr")) {
             treshold_planar = parameter.toInt();
@@ -172,7 +172,18 @@ void check_serial() {
                     other.meas_Temp[other.meas_ptr], other.meas_Vibration[other.meas_ptr]
                 );
             Serial.print(message);
-            
+        } else if(command.equals("statex")) {
+            snprintf(message, sizeof(message), ">;anal;%d;%d;%d;%d;%d;%d;%d\n",
+                last_analysis, fsm_sensorpack,
+                anal_Magni_X_outer, anal_Magni_Y_outer, anal_Magni_Z_outer,
+                anal_Vibration, anal_Temperature
+            );
+            snprintf(message, sizeof(message), ">;tris;%d;%lf;%lf;%lf;%lf;%lf;%lf\n",
+                last_tris, 
+                tris_magni_sum, tris_phi_sum, tris_theta_sum,
+                tris_magni_stdev, tris_phi_stdev, tris_theta_stdev
+            );
+        }
         } else if(command.equals("clear")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
