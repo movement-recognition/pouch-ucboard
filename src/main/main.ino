@@ -143,6 +143,11 @@ void check_serial() {
             Serial.print(">;time;");
             Serial.print(millis());
             Serial.println(";");
+        } else if(command.equals("marker")) {
+            file.print(parameter);
+            file.print("\n");
+            Serial.print(">;");
+            Serial.println(parameter);
         } else if(command.equals("trsh_plnr")) {
             treshold_planar = parameter.toInt();
         } else if(command.equals("trsh_vibr")) {
