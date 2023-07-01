@@ -47,7 +47,7 @@ const uint_fast16_t flush_interval = 1000; // milliseconds
 // 0x08 = event-logging to Serial-console
 // 0x10 = tris-logging to SD-Card
 // 0x20 = tris-logging to Serial-console
-uint_fast8_t sd_logging_mode = 0x0A; 
+uint_fast8_t sd_logging_mode = 0x3A; 
 
 // Settings for analysis
 
@@ -258,10 +258,10 @@ void check_write_sd() {
             if(sd_logging_mode & 0x08) {
                 Serial.print(message);
             }
-            fsm_sensorpack_last = fsm_sensorpack;
+            // fsm_sensorpack_last = fsm_sensorpack;
         }
 
-        if((sd_logging_mode & 0x10 || sd_logging_mode & 0x20) && tris_update) {
+        if((sd_logging_mode & 0x10 || sd_logging_mode & 0x20) && (fsm_sensorpack != fsm_sensorpack_last || tris_update)) {
             char message[100];
             snprintf(message, sizeof(message), ">;tris;%d;%lf;%lf;%lf;%lf;%lf;%lf\n",
                 last_tris, 
@@ -276,6 +276,7 @@ void check_write_sd() {
             }
 
             tris_update = 0;
+            fsm_sensorpack_last = fsm_sensorpack;
         }
         
         #ifdef TIME_LOGGER
@@ -342,19 +343,19 @@ void check_analyze() {
         anal_Vibration = anal_Vibration / (float)(OTHER_BUFFER_SIZE);
         anal_Temperature = anal_Temperature / (float)(OTHER_BUFFER_SIZE);
 
-        if(anal_Magni_Z_outer < 300 && anal_Magni_Z_outer > -300) {
-            fsm_sensorpack = 5;
-        } else if(anal_Magni_Z_outer > 10000+treshold_z_axis) {
-            fsm_sensorpack = 4;
-        } else if(anal_Magni_Z_outer < 10000-treshold_z_axis) {
-            fsm_sensorpack = 3; // moving downwards
-        } else if(abs(anal_Magni_X_outer) > treshold_planar || abs(anal_Magni_Y_outer) > treshold_planar) {
-            fsm_sensorpack = 2; // accelerated movement
-        } else if(anal_Vibration >= treshold_vibration) {
-            fsm_sensorpack = 1; // movement planar
-        } else if(anal_Vibration < treshold_vibration) {
-            fsm_sensorpack = 0; // standstill
-        }
+        // if(anal_Magni_Z_outer < 300 && anal_Magni_Z_outer > -300) {
+        //     fsm_sensorpack = 5; 
+        // } else if(anal_Magni_Z_outer > 10000+treshold_z_axis) {
+        //     fsm_sensorpack = 4;
+        // } else if(anal_Magni_Z_outer < 10000-treshold_z_axis) {
+        //     fsm_sensorpack = 3; // moving downwards
+        // } else if(abs(anal_Magni_X_outer) > treshold_planar || abs(anal_Magni_Y_outer) > treshold_planar) {
+        //     fsm_sensorpack = 2; // accelerated movement
+        // } else if(anal_Vibration >= treshold_vibration) {
+        //     fsm_sensorpack = 1; // movement planar
+        // } else if(anal_Vibration < treshold_vibration) {
+        //     fsm_sensorpack = 0; // standstill
+        // }
 
         // Add data to the tris-buffer
         double magnitude = sqrt(anal_Magni_X_outer * anal_Magni_X_outer + anal_Magni_Y_outer * anal_Magni_Y_outer + anal_Magni_Z_outer * anal_Magni_Z_outer);
@@ -395,9 +396,9 @@ void check_tris() {
             tris_theta_sum += tris_theta[buf_ptr];
         }
 
-        double tris_magni_sum = tris_magni_sum / TRIS_BUFFER_SIZE;
-        double tris_phi_sum = tris_phi_sum / TRIS_BUFFER_SIZE;
-        double tris_theta_sum = tris_theta_sum / TRIS_BUFFER_SIZE;
+        tris_magni_sum = tris_magni_sum / (double)TRIS_BUFFER_SIZE;
+        tris_phi_sum = tris_phi_sum / (double)TRIS_BUFFER_SIZE;
+        tris_theta_sum = tris_theta_sum / (double)TRIS_BUFFER_SIZE;
 
         tris_magni_stdev = 0;
         tris_phi_stdev = 0;
@@ -416,6 +417,22 @@ void check_tris() {
         tris_magni_stdev = sqrt(tris_magni_stdev / TRIS_BUFFER_SIZE);
         tris_phi_stdev = sqrt(tris_phi_stdev / TRIS_BUFFER_SIZE);
         tris_theta_stdev = sqrt(tris_theta_stdev / TRIS_BUFFER_SIZE);
+
+        if(tris_phi_sum > 0.5) {
+            fsm_sensorpack = 6; // being tilted
+        } else if(tris_magni_sum < 3000) {
+            fsm_sensorpack = 5; // free fall
+        } else if(0 == 1) {
+            fsm_sensorpack = 4; // moving upwards
+        } else if(0 == 1) {
+            fsm_sensorpack = 3; // moving downwards
+        } else if(tris_magni_stdev > 100 || tris_theta_stdev > 0.005) {
+            fsm_sensorpack = 2; // accelerated movement
+        } else if(tris_magni_stdev > 15 {
+            fsm_sensorpack = 1; // slight movement
+        } else if(tris_magni_stdev <= 15) {
+            fsm_sensorpack = 0; // standstill
+        }
 
         #ifdef TIME_LOGGER
             uint_fast32_t t_2 = micros();
