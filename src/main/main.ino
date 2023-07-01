@@ -262,8 +262,8 @@ void check_write_sd() {
         }
 
         if((sd_logging_mode & 0x10 || sd_logging_mode & 0x20) && tris_update) {
-            char message[60];
-            snprintf(message, sizeof(message), ">;tris;%d;%d;%d;%d;%d;%d;%d\n",
+            char message[100];
+            snprintf(message, sizeof(message), ">;tris;%d;%lf;%lf;%lf;%lf;%lf;%lf\n",
                 last_tris, 
                 tris_magni_sum, tris_phi_sum, tris_theta_sum,
                 tris_magni_stdev, tris_phi_stdev, tris_theta_stdev
@@ -358,8 +358,8 @@ void check_analyze() {
 
         // Add data to the tris-buffer
         double magnitude = sqrt(anal_Magni_X_outer * anal_Magni_X_outer + anal_Magni_Y_outer * anal_Magni_Y_outer + anal_Magni_Z_outer * anal_Magni_Z_outer);
-        double phi = atan2(anal_Magni_Y_outer, anal_Magni_X_outer);
-        double theta = acos(anal_Magni_Z_outer / magnitude);
+        double phi = acos(anal_Magni_Z_outer / magnitude);
+        double theta = atan2(anal_Magni_Y_outer, anal_Magni_X_outer);
 
         tris_ptr = (tris_ptr + 1) % TRIS_BUFFER_SIZE;
         tris_magni[tris_ptr] = magnitude;
@@ -384,6 +384,10 @@ void check_tris() {
             uint_fast32_t t_1 = micros();
         #endif
 
+        tris_magni_sum = 0;
+        tris_phi_sum = 0;
+        tris_theta_sum = 0;
+
         for(int i = 0; i < TRIS_BUFFER_SIZE; i++) {
             uint_fast8_t buf_ptr = (tris_ptr + i) % TRIS_BUFFER_SIZE;
             tris_magni_sum += tris_magni[buf_ptr];
@@ -395,6 +399,9 @@ void check_tris() {
         double tris_phi_sum = tris_phi_sum / TRIS_BUFFER_SIZE;
         double tris_theta_sum = tris_theta_sum / TRIS_BUFFER_SIZE;
 
+        tris_magni_stdev = 0;
+        tris_phi_stdev = 0;
+        tris_theta_stdev = 0;
         for(int i = 0; i < TRIS_BUFFER_SIZE; i++) {
             uint_fast8_t buf_ptr = (tris_ptr + i) % TRIS_BUFFER_SIZE;
             
