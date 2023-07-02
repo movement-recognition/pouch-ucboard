@@ -16,3 +16,22 @@
 - `/influx/`-namespace is redirected to the internal port 8086. For authentification, instead of the influx-functionality a simple implementation based on `.htaccess` files stored in `/etc/apache2` is used.
 - all other requests are redirected to the grafana instance. note, that the apache-server must also be configured for websockets.
 
+### how to send data to the cloud-server?
+
+use the HTTP-Endpoint `https://sensor:wd40@smartpouch.foobar.rocks/influx/` for that. Username is `sensor`, password is `wd40`. For the grafana-login, the username is `admin` whilst the password is `smartpouch`.
+
+Python-code for adding a single coordinate to the `test`-table:
+```
+url = "https://sensor:wd40@smartpouch.foobar.rocks/influx/"
+payload = "test,sensor=pouch01 lon=50.0563819,lat=8.5934919"
+
+r = requests.post(url+"write?db=master&precision=s", payload)
+r.text
+```
+
+Use the following settinngs in the grafana-panel:
+![configuration 0](docs/grafana-configure0.png)
+![configuration 1](docs/grafana-configure1.png)
+![configuration 2](docs/grafana-configure2.png)
+
+
