@@ -29,9 +29,15 @@ r = requests.post(url+"write?db=master&precision=s", payload)
 r.text
 ```
 
-Use the following settinngs in the grafana-panel:
+Use the following settings in the grafana-panel:
+Login-credentials: `admin`, pass: `smartpouch`
+
 ![configuration 0](docs/grafana-configure0.png)
+
+
 ![configuration 1](docs/grafana-configure1.png)
+
+
 ![configuration 2](docs/grafana-configure2.png)
 
 
