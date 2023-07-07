@@ -1,0 +1,71 @@
+00:14:22        CHI Day 1 Test 1 start
+00:48:30        Gehäuse ist zugeschraubt
+00:55:xx        Hendrik trägt das Device händisch auf die Palette
+01:03:xx        Das Device wird mit Spanngurt befestigt
+01:14:xx        <<< Geht das, brauchst du ne Hand? >>>
+01:21:xx        Es ist jetzt auf der Palette festgezurrt
+01:32:xx        <<< Jetzt schau ich mal kurz, ob es noch blinkt >>>
+01:39:xx        <<< Blinkt es blau? Ich seh's nich … ja, cool, gut >>>
+01:49:xx        <<< Ziehen wir die aufm Boden so weiter, was? okay. >>>
+01:51:xx        Wir ziehen sie (die Palette) jetzt auf dem Boden vor den Stapler
+01:52:15        Sie liegt auf dem Boden vor dem Stapler
+01:55:xx        Der Stapler fährt drunter
+01:56:xx        hebt leicht schräg an
+01:59:xx        und fährt an.
+02:01:xx        Fährt … drei, vier Meter vor.
+02:03:xx        Stoppt wieder
+02:05:xx        fährt Rückwärts
+02:05:xx        hebt leicht an während der Rückwärtsfahrt
+02:13:xx        Stoppt in ca. 1m Höhe
+02:16:xx        zieht wieder runter
+02:17:xx        fährt vor
+02:23:xx        stoppt wieder
+02:29:24        <<< ja, des wär gut >>>
+02:32:xx        fährt Rückwärts
+02:36:xx        langsam, schritttempo
+02:39:xx        Rückwärtskurve nach links
+02:42:xx        Vorwärts, linkskurve
+02:46:xx        beschleunigung in leichter Drehung
+02:54:19        hebt an während Vorwärtsfahrt in leichter Linkskurvendrehung
+02:59:xx        und stellt in zwei meter höhe auf eine andere … Ladung ab
+03:05:xx        <<< *murmelnd* genau >>>
+03:06:xx        steht
+03:06:xx        Stapler fährt wieder drunter, hebt wieder an, leicht schräg
+03:09:xx        fährt rückwärts raus
+03:11:21        hebt runter in rückwärts linkskurvendrehung
+03:15:xx        stellt ab
+03:18:xx        hebt wieder an, leicht schräg
+03:22:xx        fährt hoch in 30cm Höhe während Vorwärtsfahrt linkskurve <<< h:h:, ich kann nicht so schnell reden >>>
+03:28:xx        <<< ehm >>>
+03:30:xx        <<< genau, diss, hwwww, so sin'wer jetzt? >>>
+03:34:17        so 1,5 m Höhe
+03:35:xx        fährt schneller in Z-Richtung
+03:39:xx        <<< genau >>>
+03:41:xx        <<< 'nau. Lässte' langsam nochmal runter, kannsu n paar mal anfahren und bremsen vielleicht? >>>
+03:50:xx        schnelles Anfahren
+03:53:xx        relativ schnelle Bremsung
+03:54:xx        das gleiche Rückwärts
+03:59:xx        <<< genau >>> Palette ist abgesetzt
+04:01:xx        wieder aufgehoben
+04:02:xx        schnell vorwärts
+04:05:xx        <<< ramsogen >>> (unverständlich, nicht decodierbar)
+04:07:20        schnelle vorwärtsbeschleunigung
+04:12:15        und abgesetzt
+04:15:xx        <<< okay. magst du es wieder zurückfahren? gut >>>
+04:20:xx        eh, aufgehoben
+04:26:xx        eh, in ne drehung, beschleunigung
+04:34:xx        etwas schnelleres schrittempo, komplett geradeaus
+04:39:xx        gerade tatsächlich keine weitere Bewegung außer geradeaus
+04:42:xx        jetzt kommt die Kurve
+04:46:xx        kurve ist zu ende
+04:48:xx        mjoah, leichte kurve … okay
+04:50:xx        hat gebremst … hat abgesetzt
+04:55:xx        <<< cool, dann lass' uns das wieder runtermachen und ich muss wieder anschließen und den marker setzen >>>
+05:52:xx        <<< blinkts noch blau? sehr schön >>>
+05:57:xx        <<< ah, come on, USB >>>
+06:11:xx        <<< *seufzer* … läuft die Aufnahme noch? … ich hoffe? bitte? ja, tut sie. sehr gut. >>>
+06:20:xx        <<< jetzt wärs noch gut, ne verbindung zu haben. hallo? >>>
+06:35:xx        <<< aaah-ha … da kommen Werte! Krasser Scheiß! Sehr gut, okay. eeehm >>>
+05:56:xx        Ich setze jetzt gleich den Marker CHI, Day 1, Test 1, Stop.
+06:59.560       CHI_DAY1_TEST1_STOP
+07:02:xx        Das wars, Danke fürs Zuhören!
