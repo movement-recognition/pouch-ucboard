@@ -33,7 +33,7 @@ alpha_url = get_influxdb_url(alpha_host, alpha_database)
 
 # Get the current time and the time 10 minutes ago
 end_time = datetime.utcnow()
-start_time = end_time - timedelta(minutes=10)
+start_time = end_time - timedelta(minutes=11)
 
 # Query the tables in "master" database on "alpha"
 query = f'SHOW MEASUREMENTS ON "{alpha_database}"'

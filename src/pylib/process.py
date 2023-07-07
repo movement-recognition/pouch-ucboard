@@ -92,7 +92,13 @@ class SensorboxConnector:
 
 def event_hook(event):
     print(event["state"], "happened", time.time() - event["time"], "seconds ago!")
-    pass
+
+    url = "https://sensor:wd40@smartpouch.foobar.rocks/influx/"
+    payload = f"gyro_events,sensor=pouch01,type=anal state={event['state']},x={event['accel']['x']},y={event['accel']['y']},z={event['accel']['z']},vib={event['vibration']} {event['time']}"
+    try:
+        r = requests.post(url+"write?db=master&precision=s", payload, timeout=1)
+    except BaseException as e:
+        pass
 
 
 if __name__ == "__main__":
