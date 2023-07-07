@@ -62,6 +62,7 @@ class SensorboxConnector:
                 self.raspi_time = time.time()
             elif data[1] == "anal":
                 event = {
+                    "type": "anal",
                     "time": (int(data[2])/1000 - self.µc_time) + self.raspi_time,
                     "state": self.state_lookup[int(data[3])],
                     "accel": {
@@ -71,6 +72,23 @@ class SensorboxConnector:
                     },
                     "vibration": int(data[6]),
                     # "temperature": int(data[7])
+                }
+                self.event_hook(event)
+                self.events.append(event)
+            elif data[1] == "tris":
+                event = {
+                    "type": "tris",
+                    "time": (int(data[2])/1000 - self.µc_time) + self.raspi_time,
+                    "mean": {
+                        "magnitude": data[3],
+                        "phi": data[4],
+                        "theta": data[5],
+                        },
+                    "stdev": {
+                        "magnitude": data[6],
+                        "phi": data[7],
+                        "theta": data[8],
+                        },
                 }
                 self.event_hook(event)
                 self.events.append(event)
@@ -94,7 +112,10 @@ def event_hook(event):
     print(event["state"], "happened", time.time() - event["time"], "seconds ago!")
 
     url = "https://sensor:wd40@smartpouch.foobar.rocks/influx/"
-    payload = f"gyro_events,sensor=pouch01,type=anal state={event['state']},x={event['accel']['x']},y={event['accel']['y']},z={event['accel']['z']},vib={event['vibration']} {event['time']}"
+    if event["type"] == "anal":
+        payload = f"schnieboard_events,sensor=pouch01,type=anal state={event['state']},x={event['accel']['x']},y={event['accel']['y']},z={event['accel']['z']},vib={event['vibration']} {event['time']}"
+    elif event["type"] == "tris":
+        payload = f"schnieboard_events,sensor=pouch01,type=tris magni_mean={event['mean']['magnitude']},phi_mean={event['mean']['phi']},theta_mean={event['mean']['theta']},magni_stdev={event['stdev']['magnitude']},phi_stdev={event['stdev']['phi']},theta_stdev={event['stdev']['theta']} {event['time']}"
     try:
         r = requests.post(url+"write?db=master&precision=s", payload, timeout=1)
     except BaseException as e:
