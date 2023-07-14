@@ -49,6 +49,7 @@ External communicatin is possible via the serial console. The connection is conf
   * `0x08` = event-logging to Serial-console
 - `read_prm`: read-parameter: prints all saved parameters to the console. 
 - `status`: returns the last row of measurements
+- `statex`: returns the extended status information
 - `log_mode`: sets the logging mode (first byte = write all measurements to sd, second byte = write all events to sd-card). defaults to 0x02.
 
 - `clear`: clears the data-archive on the sd-card. should be called after all data has been dumped
