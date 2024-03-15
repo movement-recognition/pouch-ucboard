@@ -58,7 +58,7 @@ void LowG::setup() {
     // Set the DATA_FORMAT-Register
     Wire.beginTransmission(HW_LOCACCEL_I2C_ADR);
     Wire.write(0x31);
-    Wire.write(0x0A);
+    Wire.write(0x0A); // 0x0000 1010 // +/- 8g-Mode
     Wire.endTransmission(1);
 
 }

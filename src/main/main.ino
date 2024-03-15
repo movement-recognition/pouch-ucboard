@@ -6,12 +6,11 @@
 #include "lowG.h"
 #include "highG.h"
 #include "other.h"
+#include "gyro.h"
 
 #include "sd_card.h"
 
 #define ONBOARD_LED 2
-
-
 
 #define MAIN_CPU_SPEED 40 // switch between 40 and 80 MHz
 
@@ -32,6 +31,7 @@ String parameter;
 // would be better to implement them as singletons.
 HighG highG;
 LowG lowG;
+Gyro gyro;
 Other other;
 
 
@@ -47,7 +47,7 @@ const uint_fast16_t flush_interval = 1000; // milliseconds
 // 0x08 = event-logging to Serial-console
 // 0x10 = tris-logging to SD-Card
 // 0x20 = tris-logging to Serial-console
-uint_fast8_t sd_logging_mode = 0x3A; 
+uint_fast8_t sd_logging_mode = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20; 
 
 // Settings for analysis
 
@@ -169,12 +169,14 @@ void check_serial() {
             Serial.print(message);
         } else if(command.equals("status")) {
             // return the last measurement-dataset
-            char message[60];
-            snprintf(message, sizeof(message), ">;meas;%d;%d;%d;%d;%d;%d;%d;%d;%d;\n",
+            char message[120];
+            snprintf(message, sizeof(message), ">;meas;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;\n",
                     highG.meas_T[highG.meas_ptr],
                     highG.meas_X[highG.meas_ptr], highG.meas_Y[highG.meas_ptr], highG.meas_Z[highG.meas_ptr],
                     lowG.meas_X[lowG.meas_ptr], lowG.meas_Y[lowG.meas_ptr], lowG.meas_Z[lowG.meas_ptr],
-                    other.meas_Temp[other.meas_ptr], other.meas_Vibration[other.meas_ptr]
+                    other.meas_Temp[other.meas_ptr], other.meas_Vibration[other.meas_ptr], gyro.meas_R[gyro.meas_ptr],
+                    gyro.meas_X[gyro.meas_ptr], gyro.meas_Y[gyro.meas_ptr], gyro.meas_Z[gyro.meas_ptr], 
+                    gyro.meas_A[gyro.meas_ptr], gyro.meas_B[gyro.meas_ptr], gyro.meas_C[gyro.meas_ptr]
                 );
             Serial.print(message);
         } else if(command.equals("statex")) {
@@ -195,7 +197,7 @@ void check_serial() {
         } else if(command.equals("clear")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
-            sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+            sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
             file = SD.open("/rawData.csv", FILE_APPEND);
             digitalWrite(ONBOARD_LED, 0);
         } else if(command.equals("dump")) {
@@ -223,6 +225,7 @@ void check_interrupt() {
         #endif
         highG.interrupt();
         lowG.interrupt();
+        gyro.interrupt();
         other.interrupt();
         #ifdef TIME_LOGGER
             uint_fast32_t t_2 = micros();
@@ -247,18 +250,22 @@ void check_write_sd() {
             uint_fast32_t t_2 = micros();
         #endif
 
-        if(sd_logging_mode & 0x01 || sd_logging_mode & 0x04) { // write measurements to SD-Card
+        // generate measurement-string for writing to console and/or SD-Card
+        if(sd_logging_mode & 0x01 || sd_logging_mode & 0x04) { 
             for(uint_fast16_t q = measurement_count; q >0; q--) {
                 uint8_t highG_ptr = (highG.meas_ptr + HIGH_G_BUFFER_SIZE - q) % HIGH_G_BUFFER_SIZE;
                 uint8_t lowG_ptr = (lowG.meas_ptr + LOW_G_BUFFER_SIZE - q) % LOW_G_BUFFER_SIZE;
+                uint8_t gyro_ptr = (gyro.meas_ptr + GYRO_BUFFER_SIZE - q) % GYRO_BUFFER_SIZE;
                 uint8_t other_ptr = (other.meas_ptr + OTHER_BUFFER_SIZE - q) % OTHER_BUFFER_SIZE;
 
-                char message[60];
-                snprintf(message, sizeof(message), ">;meas;%d;%d;%d;%d;%d;%d;%d;%d;%d;\n",
+                char message[120];
+                snprintf(message, sizeof(message), ">;meas;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;\n",
                     highG.meas_T[highG_ptr],
                     highG.meas_X[highG_ptr], highG.meas_Y[highG_ptr], highG.meas_Z[highG_ptr],
                     lowG.meas_X[lowG_ptr], lowG.meas_Y[lowG_ptr], lowG.meas_Z[lowG_ptr],
-                    other.meas_Temp[other_ptr], other.meas_Vibration[other_ptr]
+                    other.meas_Temp[other_ptr], other.meas_Vibration[other_ptr], gyro.meas_R[gyro_ptr],
+                    gyro.meas_X[gyro_ptr], gyro.meas_Y[gyro_ptr], gyro.meas_Z[gyro_ptr], 
+                    gyro.meas_A[gyro_ptr], gyro.meas_B[gyro_ptr], gyro.meas_C[gyro_ptr]
                 );
                 if(sd_logging_mode & 0x01) {
                     auto status = file.print(message);
@@ -481,10 +488,11 @@ void setup() {
 
     highG.setup();
     lowG.setup();
+    gyro.setup();
     other.setup();
 
     sdCard.setup();
-    sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+    sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
     file = SD.open("/rawData.csv", FILE_APPEND);
     
 
@@ -508,7 +516,5 @@ void loop() {
     check_analyze(); // 100µs
     check_interrupt();
     check_tris(); // run every few seconds
-        
-    
 }
 
