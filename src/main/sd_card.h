@@ -21,9 +21,10 @@ class SD_Card {
         void writeFile(fs::FS &fs, const char * path, const char * message);
         void appendFile(fs::FS &fs, const char * path, const char * message);
         void readFile(fs::FS &fs, const char * path);
+        char filename[13];
     private:
         uint_fast8_t write_count = 0;
-        char filename[13];
+        
 };
 
 #endif

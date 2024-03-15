@@ -9,10 +9,10 @@
 
 
 void SD_Card::setup() {
-    filename[0] = 'd';
-    filename[1] = 'a';
-    filename[2] = 't';
-    filename[3] = 'a';
+    filename[0] = '/';
+    filename[1] = 'd';
+    filename[2] = 'a';
+    filename[3] = 't';
     filename[4] = '_';
     for(byte i = 5; i < 9; i++) {
         filename[i] = 65 + random(26);

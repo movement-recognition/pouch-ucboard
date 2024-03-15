@@ -12,7 +12,7 @@
 
 #define ONBOARD_LED 2
 
-#define MAIN_CPU_SPEED 40 // switch between 40 and 80 MHz
+#define MAIN_CPU_SPEED 80 // switch between 40 and 80, 160 and 240 MHz
 
 // #define TIME_LOGGER // switch timing related debugging info on/off
 
@@ -197,14 +197,14 @@ void check_serial() {
         } else if(command.equals("clear")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
-            sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
-            file = SD.open("/rawData.csv", FILE_APPEND);
+            sdCard.writeFile(SD, sdCard.filename, "#;meas;ticks;xH;yH;zH;xL;yL;zL;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+            file = SD.open(sdCard.filename, FILE_APPEND);
             digitalWrite(ONBOARD_LED, 0);
         } else if(command.equals("dump")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
-            sdCard.readFile(SD, "/rawData.csv");
-            file = SD.open("/rawData.csv", FILE_APPEND);
+            sdCard.readFile(SD, sdCard.filename);
+            file = SD.open(sdCard.filename, FILE_APPEND);
             digitalWrite(ONBOARD_LED, 0);
         }
         
@@ -253,12 +253,13 @@ void check_write_sd() {
         // generate measurement-string for writing to console and/or SD-Card
         if(sd_logging_mode & 0x01 || sd_logging_mode & 0x04) { 
             for(uint_fast16_t q = measurement_count; q >0; q--) {
+                // each generation takes ~200-400µs @ 80MHz
                 uint8_t highG_ptr = (highG.meas_ptr + HIGH_G_BUFFER_SIZE - q) % HIGH_G_BUFFER_SIZE;
                 uint8_t lowG_ptr = (lowG.meas_ptr + LOW_G_BUFFER_SIZE - q) % LOW_G_BUFFER_SIZE;
                 uint8_t gyro_ptr = (gyro.meas_ptr + GYRO_BUFFER_SIZE - q) % GYRO_BUFFER_SIZE;
                 uint8_t other_ptr = (other.meas_ptr + OTHER_BUFFER_SIZE - q) % OTHER_BUFFER_SIZE;
 
-                char message[120];
+                char message[120];  
                 snprintf(message, sizeof(message), ">;meas;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;\n",
                     highG.meas_T[highG_ptr],
                     highG.meas_X[highG_ptr], highG.meas_Y[highG_ptr], highG.meas_Z[highG_ptr],
@@ -267,6 +268,7 @@ void check_write_sd() {
                     gyro.meas_X[gyro_ptr], gyro.meas_Y[gyro_ptr], gyro.meas_Z[gyro_ptr], 
                     gyro.meas_A[gyro_ptr], gyro.meas_B[gyro_ptr], gyro.meas_C[gyro_ptr]
                 );
+
                 if(sd_logging_mode & 0x01) {
                     auto status = file.print(message);
                 }
@@ -492,7 +494,7 @@ void setup() {
     other.setup();
 
     sdCard.setup();
-    sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;magni;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+    sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
     file = SD.open("/rawData.csv", FILE_APPEND);
     
 
@@ -516,5 +518,7 @@ void loop() {
     check_analyze(); // 100µs
     check_interrupt();
     check_tris(); // run every few seconds
+    check_interrupt();
+    check_write_sd();
 }
 
