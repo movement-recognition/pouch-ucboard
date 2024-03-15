@@ -9,6 +9,19 @@
 
 
 void SD_Card::setup() {
+    filename[0] = 'd';
+    filename[1] = 'a';
+    filename[2] = 't';
+    filename[3] = 'a';
+    filename[4] = '_';
+    for(byte i = 5; i < 9; i++) {
+        filename[i] = 65 + random(26);
+    }
+    filename[9] = '.';
+    filename[10] = 'c';
+    filename[11] = 's';
+    filename[12] = 'v';
+
     pinMode(23, INPUT_PULLUP);
     SPI.begin(18, 19, 23);
 
@@ -38,14 +51,12 @@ void SD_Card::setup() {
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     Serial.printf("SD Card Size: %lluMB\n", cardSize);
 
-    dataFile = ((fs::FS)SD).open("datalog.csv", FILE_APPEND);
-
-
+    dataFile = ((fs::FS)SD).open(filename, FILE_APPEND);
 };
 
 void SD_Card::write(char* data) {
     if(!dataFile) {
-        dataFile = ((fs::FS)SD).open("datalog.csv", FILE_APPEND);
+        dataFile = ((fs::FS)SD).open(filename, FILE_APPEND);
     }
 
     if(! dataFile.print(data)) {

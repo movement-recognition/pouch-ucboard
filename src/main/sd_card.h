@@ -23,6 +23,7 @@ class SD_Card {
         void readFile(fs::FS &fs, const char * path);
     private:
         uint_fast8_t write_count = 0;
+        char filename[13];
 };
 
 #endif
