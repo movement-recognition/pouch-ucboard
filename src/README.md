@@ -20,3 +20,5 @@
 - switching BT off + reducing Frequency => ~25mA
 for more intensive sleeping-modes see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/sleep_modes.html#id1
 
+Depending on the CPU Speed, the runtime differs. (Data shown includes the gyro-measurements)
+![cpu_speed](../docs/timing.png)

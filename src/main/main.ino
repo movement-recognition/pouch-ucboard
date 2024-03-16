@@ -37,6 +37,7 @@ Other other;
 
 // Settings for SD-Card
 SD_Card sdCard;
+
 File file;
 uint_fast32_t last_flush_timestamp = 0;
 const uint_fast16_t flush_interval = 1000; // milliseconds
@@ -47,7 +48,7 @@ const uint_fast16_t flush_interval = 1000; // milliseconds
 // 0x08 = event-logging to Serial-console
 // 0x10 = tris-logging to SD-Card
 // 0x20 = tris-logging to Serial-console
-uint_fast8_t sd_logging_mode = 0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20; 
+uint_fast8_t sd_logging_mode = 0x01 | 0x02 | 0x10; //| 0x04 | 0x08 | 0x10 | 0x20; 
 
 // Settings for analysis
 
@@ -197,14 +198,14 @@ void check_serial() {
         } else if(command.equals("clear")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
-            sdCard.writeFile(SD, sdCard.filename, "#;meas;ticks;xH;yH;zH;xL;yL;zL;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
-            file = SD.open(sdCard.filename, FILE_APPEND);
+            sdCard.writeFile(SD, "/rawData.csv", "#;meas;ticks;xH;yH;zH;xL;yL;zL;temp;vibr;gyro_temp;xG;yG;zG;aG;bG;cG\n#;anal;ticks;fsm_sensorpack;xMean;yMean;zMean;vibrMean;tempMean;\n");
+            file = SD.open("/rawData.csv", FILE_APPEND);
             digitalWrite(ONBOARD_LED, 0);
         } else if(command.equals("dump")) {
             digitalWrite(ONBOARD_LED, 1);
             file.close();
-            sdCard.readFile(SD, sdCard.filename);
-            file = SD.open(sdCard.filename, FILE_APPEND);
+            sdCard.readFile(SD, "/rawData.csv");
+            file = SD.open("/rawData.csv", FILE_APPEND);
             digitalWrite(ONBOARD_LED, 0);
         }
         

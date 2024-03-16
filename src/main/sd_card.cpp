@@ -15,7 +15,7 @@ void SD_Card::setup() {
     filename[3] = 't';
     filename[4] = '_';
     for(byte i = 5; i < 9; i++) {
-        filename[i] = 65 + random(26);
+        filename[i] = 97 + random(26);
     }
     filename[9] = '.';
     filename[10] = 'c';
@@ -51,12 +51,12 @@ void SD_Card::setup() {
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     Serial.printf("SD Card Size: %lluMB\n", cardSize);
 
-    dataFile = ((fs::FS)SD).open(filename, FILE_APPEND);
+    dataFile = ((fs::FS)SD).open("/rawData.csv", FILE_APPEND);
 };
 
 void SD_Card::write(char* data) {
     if(!dataFile) {
-        dataFile = ((fs::FS)SD).open(filename, FILE_APPEND);
+        dataFile = ((fs::FS)SD).open("/rawData.csv", FILE_APPEND);
     }
 
     if(! dataFile.print(data)) {
