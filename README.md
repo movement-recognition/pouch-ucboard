@@ -62,4 +62,4 @@ All lines that can be parsed by a python-script on the "raspberry pi"-side start
 
 see example command:
 
-- `python3 rawUploader.py upload --inputFile ../data/2024-03-27_test004.csv --startMarkerName Test004 --endMarkerName Test004Ende --startMarkerTime 2024-03-27T17:38:20.00`
+- `python3 rawUploader.py upload --inputFile ../data/2024-03-27_test004.csv --startMarkerName Test004 --endMarkerName Test004Ende --startMarkerTime 2019-03-27T17:38:20.00 --addAnnotations true`
