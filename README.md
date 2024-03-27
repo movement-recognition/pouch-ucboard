@@ -56,3 +56,10 @@ External communicatin is possible via the serial console. The connection is conf
 - `dump`: dumps all contents on the sd-card to the serial console. during that process, analysis-precision cannot be guaranteed.
 
 All lines that can be parsed by a python-script on the "raspberry pi"-side start with the `>;` part and close with the newline-character `\n`.
+
+
+### Upload to influx
+
+see example command:
+
+- `python3 rawUploader.py upload --inputFile ../data/2024-03-27_test004.csv --startMarkerName Test004 --endMarkerName Test004Ende --startMarkerTime 2024-03-27T17:38:20.00`
