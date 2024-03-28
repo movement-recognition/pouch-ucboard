@@ -7,6 +7,12 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
+__author__ = "Leon Schnieber"
+__version__ = "1.0.1"
+__maintainer__ = "Leon Schnieber"
+__email__ = "leon@faler.ch"
+__status__ = "Development"
+
 @click.group()
 def cli():
     pass
@@ -53,7 +59,7 @@ def delete_database(influxbaseurl, influxdatabase, influxtablename):
 @click.option("--influxBaseUrl", default="https://sensor:wd40@smartpouch.foobar.rocks/influx", help="URL to influx-server endpoint")
 @click.option("--influxDatabase", default="master", help="Database-name of influx-server to write in")
 @click.option("--influxTableName", default="schnieboard_meas", help="table name inside the influx-database, e.g. for debugging")
-@click.option("--influxUploadBatchSize", default=100, help="batch size for uploads (# of rows in one request)")
+@click.option("--influxUploadBatchSize", default=1000, help="batch size for uploads (# of rows in one request)")
 @click.option("--grafanaConfigfile", default="config.json", help="path to the config-file containing grafana-config-data")
 @click.pass_context
 def upload(ctx, inputfile, startmarkername, endmarkername, startmarkertime, addannotations, influxbaseurl, influxdatabase, influxtablename, influxuploadbatchsize, grafanaconfigfile):
@@ -64,6 +70,7 @@ def upload(ctx, inputfile, startmarkername, endmarkername, startmarkertime, adda
 
     read_filename = inputfile
     mode = -1
+    offset_ticks = 0
     with open(read_filename, "r") as f:
         raw_rows = []
         for row in f.readlines():
@@ -71,13 +78,17 @@ def upload(ctx, inputfile, startmarkername, endmarkername, startmarkertime, adda
                 raw_rows.append(row.strip().split(";")) # get first row!
                 mode = 0
             elif ";meas;" in row and mode == 1:
+                offset_ticks = int(row.strip().split(";")[2])
+                raw_rows.append(row.strip().split(";"))
+                mode = 2
+            elif ";meas;" in row and mode == 2:
                 raw_rows.append(row.strip().split(";"))
             elif ">;" not in row:
                 if row.strip() == startmarkername:
                     print("start marker found!")
                     mode = 1
                 elif row.strip() == endmarkername:
-                    mode = 2
+                    mode = 3
                     print("end marker found!")
     if mode == 0:
         print("WARNING: no start marker was found. aborting.")
@@ -101,7 +112,7 @@ def upload(ctx, inputfile, startmarkername, endmarkername, startmarkertime, adda
             if k not in ["#", "meas", "ticks", 18]:
                 substr += f"{k}={row[k]},"
         try:
-            time_str = startmarkertime_timestamp * 1e6 + int(row["ticks"]) * 1000
+            time_str = startmarkertime_timestamp * 1e6 + int(row["ticks"]) * 1000 - offset_ticks * 1000
             if first_timestamp == 0:
                 first_timestamp = time_str
         except:
@@ -117,6 +128,14 @@ def upload(ctx, inputfile, startmarkername, endmarkername, startmarkertime, adda
                 batchct = 0
             else:
                 print("req fail", r, r.text)
+    # upload the remaining dataset-parts
+    r = requests.post(f"{influxbaseurl}/write?db={influxdatabase}&precision=u", grafana_string, timeout=10)
+    if r.status_code >= 200 and r.status_code <= 299:
+        print(f"\ruploading rows {index} / {df.shape[0]}", end="")
+        grafana_string = ""
+        batchct = 0
+    else:
+        print("req fail", r, r.text)
 
     last_timestamp = time_str
     
