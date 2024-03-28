@@ -63,3 +63,9 @@ All lines that can be parsed by a python-script on the "raspberry pi"-side start
 see example command:
 
 - `python3 rawUploader.py upload --inputFile ../data/2024-03-27_test004.csv --startMarkerName Test004 --endMarkerName Test004Ende --startMarkerTime 2019-03-27T17:38:20.00 --addAnnotations true`
+
+add frame numbers to a video:
+- `ffmpeg -i input_video.mp4 -vf "drawtext=fontfile=/usr/share/fonts/TTF/Inconsolata-Medium.ttf: text='%{pts} | %{frame_num}': start_number=1: x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=20: box=1: boxcolor=white: boxborderw=5" -c:a copy output_video.mp4`
+
+- extract relevant data from video and run the following command:
+- `python3 rawUploader.py upload-videostamps --inputFile=input_video.mp4 --startMarkerTime 2019-03-27T17:38:20.00 --startmarkerframe=123 --endmarkerframe=13785 --framerate 30.084`
